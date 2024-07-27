@@ -9,6 +9,8 @@ public class RocketController : MonoBehaviour
     [SerializeField] private float minScaleY = 0.5f;  // Minimum scale on the Y-axis before shaking starts
     [SerializeField] private float maxVelocity = 20f;  // Maximum velocity the rocket can reach
     [SerializeField] private float moveForce = 5f;  // Force to apply when moving in the direction of the tap
+    [SerializeField] private float returnDelay = 1f;  // Delay before the rocket rotates back to 0
+    [SerializeField] private float rotationDuration = 0.5f;  // Duration of the rotation animation
 
     private Vector2 dragStartPos;
     private Vector2 dragEndPos;
@@ -26,7 +28,7 @@ public class RocketController : MonoBehaviour
         originalScale = transform.localScale;
     }
 
-    void Update()
+    private void Update()
     {
         if (canDrag && Input.GetMouseButtonDown(0))
         {
@@ -59,11 +61,11 @@ public class RocketController : MonoBehaviour
 
             if (tapPosition.x < transform.position.x)
             {
-                RotateAndMoveRocket(45f); 
+                RotateAndMoveRocket(45f);
             }
             else
             {
-                RotateAndMoveRocket(-45f); 
+                RotateAndMoveRocket(-45f);
             }
         }
 
@@ -74,7 +76,7 @@ public class RocketController : MonoBehaviour
         }
     }
 
-    void LaunchRocket()
+    private void LaunchRocket()
     {
         Vector2 dragVector = dragEndPos - dragStartPos;
 
@@ -91,7 +93,7 @@ public class RocketController : MonoBehaviour
         rb.AddForce(Vector2.up * launchForce, ForceMode2D.Impulse);
     }
 
-    void UpdateScale(Vector2 currentDragPos)
+    private void UpdateScale(Vector2 currentDragPos)
     {
         Vector2 dragVector = currentDragPos - dragStartPos;
 
@@ -110,7 +112,7 @@ public class RocketController : MonoBehaviour
         }
     }
 
-    void ResetScale()
+    private void ResetScale()
     {
         // Reset the scale back to the original
         transform.localScale = originalScale;
@@ -149,7 +151,23 @@ public class RocketController : MonoBehaviour
             Vector2 moveDirection = transform.up; // The up vector after rotation is the new forward direction
 
             // Apply force in the direction of the new rotation
-            rb.AddForce(moveDirection * moveForce, ForceMode2D.Impulse);
+            rb.AddForce(moveDirection * moveForce *2, ForceMode2D.Impulse);
+
+            // Rotate back to 0 after the delay
+            Invoke(nameof(RotateBackToZero), returnDelay);
+        });
+    }
+
+    private void RotateBackToZero()
+    {
+        // Store the current velocity
+        Vector2 currentVelocity = rb.velocity;
+
+        // Rotate back to 0 degrees
+        transform.DORotate(Vector3.zero, rotationDuration, RotateMode.Fast).OnComplete(() =>
+        {
+            // Apply the stored velocity to ensure the rocket continues in the same direction
+            rb.velocity = currentVelocity;
         });
     }
 
