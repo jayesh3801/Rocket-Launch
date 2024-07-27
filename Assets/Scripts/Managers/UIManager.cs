@@ -8,12 +8,14 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance;
 
     public TextMeshProUGUI headingText;
+    public TextMeshProUGUI levelText;
     public GameObject nextLevelbutton;
     public GameObject retryLevelbutton;
 
     private void Awake()
     {
         Instance = this;
+       levelText.text =  SceneManager.GetActiveScene().name.ToString();
     }
 
     public void LevelCompleted()
