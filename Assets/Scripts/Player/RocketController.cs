@@ -160,14 +160,14 @@ public class RocketController : MonoBehaviour
 
     private void RotateBackToZero()
     {
-        // Store the current velocity
-        Vector2 currentVelocity = rb.velocity;
+        // Store the current vertical velocity
+        float verticalVelocity = rb.velocity.y;
 
         // Rotate back to 0 degrees
         transform.DORotate(Vector3.zero, rotationDuration, RotateMode.Fast).OnComplete(() =>
         {
-            // Apply the stored velocity to ensure the rocket continues in the same direction
-            rb.velocity = currentVelocity;
+            // Apply the same vertical velocity to ensure the rocket continues upward
+            rb.velocity = new Vector2(0, verticalVelocity);
         });
     }
 
