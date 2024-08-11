@@ -28,10 +28,7 @@ public class RocketController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         originalScale = transform.localScale;
-
-        rocketFuel = GetComponent<RocketFuel>();  // Get the RocketFuel component
-
-        StarManager.Instance.ResetCollectedStars();  // Reset stars at the start of each level
+        rocketFuel = GetComponent<RocketFuel>(); 
     }
 
     private void Update()
@@ -97,7 +94,7 @@ public class RocketController : MonoBehaviour
 
     private void ResetScale()
     {
-        transform.DOScaleY(originalScale.y, 0.1f);  // Use DOTween to reset scale smoothly
+        transform.DOScaleY(originalScale.y, 0.1f);  
     }
 
     private IEnumerator ShowSpeedLines()
@@ -162,16 +159,8 @@ public class RocketController : MonoBehaviour
         {
             case "Goal":
                 rb.velocity = Vector2.zero;
-                if (StarManager.Instance.HasEnoughStars())
-                {
-                    UIManager.Instance.LevelCompleted();
-                    Debug.Log("YOU WON");
-                }
-                else
-                {
-                    UIManager.Instance.LevelFailed();
-                    Debug.Log("YOU LOSE - Not enough stars collected");
-                }
+                UIManager.Instance.LevelCompleted();
+                Debug.Log("YOU WON");
                 break;
 
             case "Obstacle":
@@ -188,7 +177,7 @@ public class RocketController : MonoBehaviour
             case "Fuel":
                 if (rocketFuel != null)
                 {
-                    rocketFuel.AddFuel(150f);
+                    rocketFuel.AddFuel();
                 }
                 Destroy(collision.gameObject);
                 break;
@@ -199,6 +188,6 @@ public class RocketController : MonoBehaviour
     {
         rb.velocity = Vector2.zero;
         UIManager.Instance.LevelFailed();
-        Destroy(gameObject);  // Or trigger other logic, like showing a "game over" screen
+        Destroy(gameObject);
     }
 }

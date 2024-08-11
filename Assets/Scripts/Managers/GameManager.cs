@@ -7,7 +7,6 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        // Check if an instance already exists
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);

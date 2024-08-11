@@ -1518,6 +1518,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &377015050 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4598701525108074092, guid: 425cc9a2123a8f647a973954bf4c4672, type: 3}
+  m_PrefabInstance: {fileID: 377015048}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &387831472
 GameObject:
   m_ObjectHideFlags: 0
@@ -4269,6 +4280,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: StarManager
       objectReference: {fileID: 0}
+    - target: {fileID: 8828563692987325445, guid: 4d2c40b9b3b178f47b488d28ba926225, type: 3}
+      propertyPath: starCounter
+      value: 
+      objectReference: {fileID: 377015050}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

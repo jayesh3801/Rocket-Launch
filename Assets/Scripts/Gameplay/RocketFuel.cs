@@ -6,6 +6,7 @@ public class RocketFuel : MonoBehaviour
     [SerializeField] private float initialFuel = 500f;
     private float currentFuel;
     private Vector2 lastPosition;
+    private float fuelAmountOnPickup = 150f;
 
     [SerializeField] private Image fuelFillImage;  // Reference to the image with fill
 
@@ -39,9 +40,9 @@ public class RocketFuel : MonoBehaviour
         }
     }
 
-    public void AddFuel(float amount)
+    public void AddFuel()
     {
-        currentFuel += amount;
+        currentFuel += fuelAmountOnPickup;
         if (currentFuel > initialFuel)
         {
             currentFuel = initialFuel;
