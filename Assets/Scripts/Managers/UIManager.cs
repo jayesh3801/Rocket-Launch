@@ -11,11 +11,13 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI levelText;
     public GameObject nextLevelbutton;
     public GameObject retryLevelbutton;
+    public GameObject pauseButton;
+    public GameObject pausePanel;
 
     private void Awake()
     {
         Instance = this;
-       levelText.text =  SceneManager.GetActiveScene().name.ToString();
+        levelText.text = SceneManager.GetActiveScene().name.ToString();
     }
 
     public void LevelCompleted()
@@ -28,13 +30,17 @@ public class UIManager : MonoBehaviour
         StartCoroutine(EnableUIwithDelay(1));
     }
 
-    public void OnNextLevelCliked()
+    public void OnNextLevelClicked()
     {
         GameManager.Instance.LoadSceneByIndex(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
-    public void OnRetryLevelCliked()
+    public void OnRetryLevelClicked()
     {
+        if (Time.timeScale == 0f)
+        {
+            Time.timeScale = 1f;
+        }
         GameManager.Instance.LoadSceneByIndex(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -63,5 +69,19 @@ public class UIManager : MonoBehaviour
         headingText.gameObject.SetActive(true);
         headingText.text = "Level Failed";
         retryLevelbutton.SetActive(true);
+    }
+
+    public void OnPauseButtonClicked()
+    {
+        Time.timeScale = 0f;
+        pausePanel.SetActive(true);
+        pauseButton.SetActive(false);
+    }
+
+    public void OnResumeButtonClicked()
+    {
+        Time.timeScale = 1f;
+        pausePanel.SetActive(false);
+        pauseButton.SetActive(true);
     }
 }

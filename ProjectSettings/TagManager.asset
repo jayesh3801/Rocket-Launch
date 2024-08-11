@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Goal
   - Obstacle
+  - Fuel
+  - Star
   layers:
   - Default
   - TransparentFX

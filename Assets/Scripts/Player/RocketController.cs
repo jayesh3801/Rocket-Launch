@@ -1,190 +1,204 @@
 using UnityEngine;
 using DG.Tweening;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 public class RocketController : MonoBehaviour
 {
-    [SerializeField] private float maxDragDistance = 5f;  // Maximum distance the player can drag
-    [SerializeField] private float launchForceMultiplier = 10f;  // Multiplier to convert drag distance to force
-    [SerializeField] private float minScaleY = 0.5f;  // Minimum scale on the Y-axis before shaking starts
-    [SerializeField] private float maxVelocity = 20f;  // Maximum velocity the rocket can reach
-    [SerializeField] private float moveForce = 5f;  // Force to apply when moving in the direction of the tap
-    [SerializeField] private float returnDelay = 1f;  // Delay before the rocket rotates back to 0
-    [SerializeField] private float rotationDuration = 0.5f;  // Duration of the rotation animation
+    [SerializeField] private float maxDragDistance = 5f;
+    [SerializeField] private float launchForceMultiplier = 10f;
+    [SerializeField] private float minScaleY = 0.5f;
+    [SerializeField] private float maxVelocity = 20f;
+    [SerializeField] private float moveForce = 5f;
+    [SerializeField] private float returnDelay = 1f;
+    [SerializeField] private float rotationDuration = 0.5f;
 
     private Vector2 dragStartPos;
     private Vector2 dragEndPos;
     private bool isDragging = false;
-    private bool canDrag = true;
     private bool isLaunched = false;
     private Rigidbody2D rb;
     private Vector3 originalScale;
 
     [SerializeField] private GameObject speedLineVFX;
 
-    void Start()
+    private RocketFuel rocketFuel;
+
+    private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         originalScale = transform.localScale;
+
+        rocketFuel = GetComponent<RocketFuel>();  // Get the RocketFuel component
+
+        StarManager.Instance.ResetCollectedStars();  // Reset stars at the start of each level
     }
 
     private void Update()
     {
-        if (canDrag && Input.GetMouseButtonDown(0))
+        HandleInput();
+        CapVelocity();
+    }
+
+    private void HandleInput()
+    {
+        if (Input.GetMouseButtonDown(0))
         {
-            dragStartPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            isDragging = true;
+            if (!isLaunched && !IsPointerOverUI())
+            {
+                dragStartPos = GetMouseWorldPosition();
+                isDragging = true;
+            }
+            else
+            {
+                HandleRotationInput();
+            }
         }
 
-        if (isDragging && Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && isDragging)
         {
-            dragEndPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            dragEndPos = GetMouseWorldPosition();
             LaunchRocket();
-            ResetScale();
-            StartCoroutine(ShowSpeedLines());
             isDragging = false;
-            canDrag = false;
             isLaunched = true;
         }
 
         if (isDragging)
         {
-            Vector2 currentDragPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            UpdateScale(currentDragPos);
+            UpdateScale(GetMouseWorldPosition());
         }
+    }
 
-        // Handle tap input for rotation after launch
-        if (isLaunched && Input.GetMouseButtonDown(0))
+    private Vector2 GetMouseWorldPosition()
+    {
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mousePos.z = 0;
+        return mousePos;
+    }
+
+    private void LaunchRocket()
+    {
+        Vector2 dragVector = dragEndPos - dragStartPos;
+        dragVector = Vector2.ClampMagnitude(dragVector, maxDragDistance);
+
+        float launchForce = dragVector.magnitude * launchForceMultiplier;
+        rb.AddForce(Vector2.up * launchForce, ForceMode2D.Impulse);
+
+        ResetScale();
+        StartCoroutine(ShowSpeedLines());
+    }
+
+    private void UpdateScale(Vector2 currentDragPos)
+    {
+        float dragMagnitude = Vector2.Distance(currentDragPos, dragStartPos);
+        float scaleY = Mathf.Lerp(originalScale.y, minScaleY, Mathf.Clamp01(dragMagnitude / maxDragDistance));
+        transform.localScale = new Vector3(transform.localScale.x, scaleY, transform.localScale.z);
+    }
+
+    private void ResetScale()
+    {
+        transform.DOScaleY(originalScale.y, 0.1f);  // Use DOTween to reset scale smoothly
+    }
+
+    private IEnumerator ShowSpeedLines()
+    {
+        speedLineVFX.SetActive(true);
+        yield return new WaitForSeconds(1f);
+        speedLineVFX.SetActive(false);
+    }
+
+    private void HandleRotationInput()
+    {
+        Vector2 tapPosition = GetMouseWorldPosition();
+        float angle = (tapPosition.x < transform.position.x) ? 45f : -45f;
+
+        RotateAndMoveRocket(angle);
+    }
+
+    private void RotateAndMoveRocket(float angle)
+    {
+        float targetZRotation = Mathf.Clamp(transform.eulerAngles.z + angle, -45f, 45f);
+
+        if (!Mathf.Approximately(targetZRotation, transform.eulerAngles.z))
         {
-            Vector3 tapPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            tapPosition.z = 0; // Ensure z position is zero for 2D
+            transform.DORotate(Vector3.forward * targetZRotation, rotationDuration, RotateMode.Fast)
+                .OnComplete(() => ApplyMovementForce());
 
-            if (tapPosition.x < transform.position.x)
-            {
-                RotateAndMoveRocket(45f);
-            }
-            else
-            {
-                RotateAndMoveRocket(-45f);
-            }
+            Invoke(nameof(RotateBackToZero), returnDelay);
         }
+    }
 
-        // Cap the rocket's velocity to maxVelocity
+    private void ApplyMovementForce()
+    {
+        Vector2 moveDirection = transform.up;
+        rb.AddForce(moveDirection * moveForce, ForceMode2D.Impulse);
+    }
+
+    private void RotateBackToZero()
+    {
+        float verticalVelocity = rb.velocity.y;
+        transform.DORotate(Vector3.zero, rotationDuration, RotateMode.Fast).OnComplete(() =>
+        {
+            rb.velocity = new Vector2(0, verticalVelocity);
+        });
+    }
+
+    private void CapVelocity()
+    {
         if (rb.velocity.magnitude > maxVelocity)
         {
             rb.velocity = rb.velocity.normalized * maxVelocity;
         }
     }
 
-    private void LaunchRocket()
+    private bool IsPointerOverUI()
     {
-        Vector2 dragVector = dragEndPos - dragStartPos;
-
-        // Limit the drag distance to maxDragDistance
-        if (dragVector.magnitude > maxDragDistance)
-        {
-            dragVector = dragVector.normalized * maxDragDistance;
-        }
-
-        // Calculate the launch force based on the drag distance
-        float launchForce = dragVector.magnitude * launchForceMultiplier;
-
-        // Apply the force to the rocket's Rigidbody2D
-        rb.AddForce(Vector2.up * launchForce, ForceMode2D.Impulse);
-    }
-
-    private void UpdateScale(Vector2 currentDragPos)
-    {
-        Vector2 dragVector = currentDragPos - dragStartPos;
-
-        // Limit the drag distance to maxDragDistance
-        if (dragVector.magnitude > maxDragDistance)
-        {
-            dragVector = dragVector.normalized * maxDragDistance;
-        }
-
-        // Calculate the new scale on the Y-axis
-        float scaleY = Mathf.Lerp(originalScale.y, minScaleY, dragVector.magnitude / maxDragDistance);
-
-        if (scaleY > minScaleY)
-        {
-            transform.DOScaleY(scaleY, 0.1f);
-        }
-    }
-
-    private void ResetScale()
-    {
-        // Reset the scale back to the original
-        transform.localScale = originalScale;
-    }
-
-    private IEnumerator ShowSpeedLines()
-    {
-        speedLineVFX.SetActive(true);
-        yield return new WaitForSeconds(1);
-        speedLineVFX.SetActive(false);
-    }
-
-    private void RotateAndMoveRocket(float angle)
-    {
-        float currentZRotation = transform.eulerAngles.z;
-        if (currentZRotation > 180)
-        {
-            currentZRotation -= 360;
-        }
-
-        float targetZRotation = currentZRotation + angle;
-
-        // Clamp the target rotation to -45 and 45 degrees
-        targetZRotation = Mathf.Clamp(targetZRotation, -45f, 45f);
-
-        // If target rotation is same as current rotation, return without rotating
-        if (Mathf.Approximately(targetZRotation, currentZRotation))
-        {
-            return;
-        }
-
-        // Rotate the rocket
-        transform.DORotate(Vector3.forward * targetZRotation, 0.5f, RotateMode.Fast).OnComplete(() =>
-        {
-            // Calculate the direction to move based on the new rotation
-            Vector2 moveDirection = transform.up; // The up vector after rotation is the new forward direction
-
-            // Apply force in the direction of the new rotation
-            rb.AddForce(moveDirection * moveForce *2, ForceMode2D.Impulse);
-
-            // Rotate back to 0 after the delay
-            Invoke(nameof(RotateBackToZero), returnDelay);
-        });
-    }
-
-    private void RotateBackToZero()
-    {
-        // Store the current vertical velocity
-        float verticalVelocity = rb.velocity.y;
-
-        // Rotate back to 0 degrees
-        transform.DORotate(Vector3.zero, rotationDuration, RotateMode.Fast).OnComplete(() =>
-        {
-            // Apply the same vertical velocity to ensure the rocket continues upward
-            rb.velocity = new Vector2(0, verticalVelocity);
-        });
+        return EventSystem.current.IsPointerOverGameObject();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.collider.CompareTag("Goal"))
+        switch (collision.collider.tag)
         {
-            rb.velocity = Vector2.zero;
-            UIManager.Instance.LevelCompleted();
-            Debug.Log("YOU WON");
+            case "Goal":
+                rb.velocity = Vector2.zero;
+                if (StarManager.Instance.HasEnoughStars())
+                {
+                    UIManager.Instance.LevelCompleted();
+                    Debug.Log("YOU WON");
+                }
+                else
+                {
+                    UIManager.Instance.LevelFailed();
+                    Debug.Log("YOU LOSE - Not enough stars collected");
+                }
+                break;
+
+            case "Obstacle":
+                rb.velocity = Vector2.zero;
+                UIManager.Instance.LevelFailed();
+                Destroy(gameObject);
+                Debug.Log("YOU LOSE");
+                break;
+
+            case "Star":
+                StarManager.Instance.CollectStar(collision.gameObject);
+                break;
+
+            case "Fuel":
+                if (rocketFuel != null)
+                {
+                    rocketFuel.AddFuel(150f);
+                }
+                Destroy(collision.gameObject);
+                break;
         }
-        if (collision.collider.CompareTag("Obstacle"))
-        {
-            rb.velocity = Vector2.zero;
-            UIManager.Instance.LevelFailed();
-            Destroy(gameObject);
-            Debug.Log("YOU LOOSE");
-        }
+    }
+
+    public void OnFuelDepleted()
+    {
+        rb.velocity = Vector2.zero;
+        UIManager.Instance.LevelFailed();
+        Destroy(gameObject);  // Or trigger other logic, like showing a "game over" screen
     }
 }
