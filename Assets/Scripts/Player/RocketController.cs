@@ -24,6 +24,9 @@ public class RocketController : MonoBehaviour
 
     private RocketFuel rocketFuel;
 
+    private bool isShieldActive;
+
+
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -40,7 +43,11 @@ public class RocketController : MonoBehaviour
     private void HandleInput()
     {
         if (Input.GetMouseButtonDown(0))
-        {
+
+        {   
+            // if(DoubleTap check) // 
+            // PowerUpManager.Instance.StartShieldPowerUp(); //
+
             if (!isLaunched && !IsPointerOverUI())
             {
                 dragStartPos = GetMouseWorldPosition();
@@ -154,7 +161,7 @@ public class RocketController : MonoBehaviour
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
-    {
+    { 
         switch (collision.collider.tag)
         {
             case "Goal":
@@ -164,14 +171,24 @@ public class RocketController : MonoBehaviour
                 break;
 
             case "Obstacle":
+                if(isShieldActive){
+                    isShieldActive = false;
+                    break;
+                }
                 rb.velocity = Vector2.zero;
                 UIManager.Instance.LevelFailed();
                 Destroy(gameObject);
                 Debug.Log("YOU LOSE");
                 break;
+        }
+    }
+
+    public void OnTriggerEnter2D(Collider2D collider){
+        switch (collider.tag)
+        {
 
             case "Star":
-                StarManager.Instance.CollectStar(collision.gameObject);
+                StarManager.Instance.CollectStar(collider.gameObject);
                 break;
 
             case "Fuel":
@@ -179,7 +196,7 @@ public class RocketController : MonoBehaviour
                 {
                     rocketFuel.AddFuel();
                 }
-                Destroy(collision.gameObject);
+                Destroy(collider.gameObject);
                 break;
         }
     }
@@ -189,5 +206,19 @@ public class RocketController : MonoBehaviour
         rb.velocity = Vector2.zero;
         UIManager.Instance.LevelFailed();
         Destroy(gameObject);
+    }
+
+    public void ActivateShield(){
+        
+        isShieldActive = true;
+
+        // Additional shield activation logic // 
+
+        Debug.Log("Shield Activated!");
+
+    }
+
+    public void ApplyPowerUp(IPowerUp powerUp){
+        powerUp.Execute();
     }
 }
