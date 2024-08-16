@@ -11,7 +11,7 @@ public class PowerUpManager : MonoBehaviour
   }
   public RocketController rocket;
 
-  void StartShieldPowerUp(){
+  public void StartShieldPowerUp(){
     IPowerUp ShieldManager = new ShieldManager(rocket);
 
     rocket.ApplyPowerUp(ShieldManager);

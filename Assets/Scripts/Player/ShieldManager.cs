@@ -15,6 +15,7 @@ public class ShieldManager : IPowerUp
 
    public void Execute(){
     // Logic to activate shield // 
+    // waiting for visuals from designer //
     rocket.ActivateShield();
    }
 }

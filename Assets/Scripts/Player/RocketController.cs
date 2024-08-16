@@ -12,6 +12,7 @@ public class RocketController : MonoBehaviour
     [SerializeField] private float moveForce = 5f;
     [SerializeField] private float returnDelay = 1f;
     [SerializeField] private float rotationDuration = 0.5f;
+    [SerializeField] private float doubleTapTime = 0.3f;
 
     private Vector2 dragStartPos;
     private Vector2 dragEndPos;
@@ -25,6 +26,8 @@ public class RocketController : MonoBehaviour
     private RocketFuel rocketFuel;
 
     private bool isShieldActive;
+
+    private float lastTapTime;
 
 
     private void Start()
@@ -43,8 +46,14 @@ public class RocketController : MonoBehaviour
     private void HandleInput()
     {
         if (Input.GetMouseButtonDown(0))
-
-        {   
+        {   if(Time.time - lastTapTime < doubleTapTime && !isLaunched)
+            {
+                PowerUpManager.Instance.StartShieldPowerUp();
+            }
+            else
+            {
+                lastTapTime = Time.time;
+            }
             // if(DoubleTap check) // 
             // PowerUpManager.Instance.StartShieldPowerUp(); //
 
