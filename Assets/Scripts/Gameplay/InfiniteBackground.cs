@@ -28,7 +28,7 @@ public class InfiniteBackground : MonoBehaviour
             newPos.y += 2 * backgroundHeight;
             transform.position = newPos;
         }
-        else if (transform.position.y - backgroundHeight > cameraTransform.position.y)
+        else if (transform.position.y - backgroundHeight  > cameraTransform.position.y)
         {
             // Reposition the background to the bottom
             Vector3 newPos = transform.position;

@@ -26,6 +26,7 @@ public class RocketController : MonoBehaviour
     private RocketFuel rocketFuel;
 
     private bool isShieldActive;
+    private bool alreadyTapped;
 
     private float lastTapTime;
 
@@ -46,7 +47,8 @@ public class RocketController : MonoBehaviour
     private void HandleInput()
     {
         if (Input.GetMouseButtonDown(0))
-        {   if(Time.time - lastTapTime < doubleTapTime && !isLaunched)
+        {   
+            if(Time.time - lastTapTime < doubleTapTime && !isLaunched)
             {
                 PowerUpManager.Instance.StartShieldPowerUp();
             }
@@ -54,9 +56,6 @@ public class RocketController : MonoBehaviour
             {
                 lastTapTime = Time.time;
             }
-            // if(DoubleTap check) // 
-            // PowerUpManager.Instance.StartShieldPowerUp(); //
-
             if (!isLaunched && !IsPointerOverUI())
             {
                 dragStartPos = GetMouseWorldPosition();
@@ -64,6 +63,7 @@ public class RocketController : MonoBehaviour
             }
             else
             {
+                if(!alreadyTapped)
                 HandleRotationInput();
             }
         }
@@ -71,9 +71,12 @@ public class RocketController : MonoBehaviour
         if (Input.GetMouseButtonUp(0) && isDragging)
         {
             dragEndPos = GetMouseWorldPosition();
-            LaunchRocket();
-            isDragging = false;
-            isLaunched = true;
+            if (Vector2.Distance(dragStartPos, dragEndPos) > 0.2f)
+            {
+                LaunchRocket();
+                isDragging = false;
+                isLaunched = true;
+            }
         }
 
         if (isDragging)
@@ -122,6 +125,7 @@ public class RocketController : MonoBehaviour
 
     private void HandleRotationInput()
     {
+        alreadyTapped = true;
         Vector2 tapPosition = GetMouseWorldPosition();
         float angle = (tapPosition.x < transform.position.x) ? 45f : -45f;
 
@@ -153,6 +157,7 @@ public class RocketController : MonoBehaviour
         transform.DORotate(Vector3.zero, rotationDuration, RotateMode.Fast).OnComplete(() =>
         {
             rb.velocity = new Vector2(0, verticalVelocity);
+            alreadyTapped = false;
         });
     }
 
@@ -168,12 +173,17 @@ public class RocketController : MonoBehaviour
     {
         return EventSystem.current.IsPointerOverGameObject();
     }
-
+    bool winSfxPlayed = false;
     private void OnCollisionEnter2D(Collision2D collision)
     { 
         switch (collision.collider.tag)
         {
             case "Goal":
+                if (!winSfxPlayed)
+                {
+                    AudioManager.Instance.PlayWinSFX();
+                    winSfxPlayed = true;
+                }
                 rb.velocity = Vector2.zero;
                 UIManager.Instance.LevelCompleted();
                 Debug.Log("YOU WON");
@@ -184,6 +194,7 @@ public class RocketController : MonoBehaviour
                     isShieldActive = false;
                     break;
                 }
+                AudioManager.Instance.PlayCrashSFX();
                 rb.velocity = Vector2.zero;
                 UIManager.Instance.LevelFailed();
                 Destroy(gameObject);
@@ -195,8 +206,12 @@ public class RocketController : MonoBehaviour
     public void OnTriggerEnter2D(Collider2D collider){
         switch (collider.tag)
         {
+            case "GoalTrigger":
+                Camera.main.GetComponent<CameraFollow>().enabled = false;
+                break;
 
             case "Star":
+                AudioManager.Instance.PlayStarCollectSFX();
                 StarManager.Instance.CollectStar(collider.gameObject);
                 break;
 
@@ -205,6 +220,7 @@ public class RocketController : MonoBehaviour
                 {
                     rocketFuel.AddFuel();
                 }
+                AudioManager.Instance.PlayStarCollectSFX();
                 Destroy(collider.gameObject);
                 break;
         }

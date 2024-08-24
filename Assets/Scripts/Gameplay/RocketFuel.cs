@@ -9,6 +9,7 @@ public class RocketFuel : MonoBehaviour
     private float fuelAmountOnPickup = 150f;
 
     [SerializeField] private Image fuelFillImage;  // Reference to the image with fill
+    private bool isAlertAllowed = true;
 
     private void Start()
     {
@@ -20,6 +21,14 @@ public class RocketFuel : MonoBehaviour
 
     private void Update()
     {
+        if(isAlertAllowed)
+        {
+            if (currentFuel < 50f)
+            {
+                //AudioManager.Instance.PlayFuelAlertSFX();
+                isAlertAllowed = false;
+            }
+        }
         ConsumeFuelBasedOnMovement();
     }
 
@@ -42,6 +51,7 @@ public class RocketFuel : MonoBehaviour
 
     public void AddFuel()
     {
+        isAlertAllowed = true;
         currentFuel += fuelAmountOnPickup;
         if (currentFuel > initialFuel)
         {
