@@ -13,11 +13,37 @@ public class UIManager : MonoBehaviour
     public GameObject retryLevelbutton;
     public GameObject pauseButton;
     public GameObject pausePanel;
+    public GameObject shieldUI;
 
     private void Awake()
     {
         Instance = this;
         levelText.text = SceneManager.GetActiveScene().name.ToString();
+    }
+
+    private void OnEnable()
+    {
+        PowerUpManager.OnShieldDeactivated += OnShieldDeactivated;
+    }
+
+    private void OnDisable()
+    {
+        PowerUpManager.OnShieldDeactivated -= OnShieldDeactivated;
+    }
+
+    public void OnShieldPickedUp()
+    {
+        shieldUI.SetActive(true);
+    }
+
+    public void OnShieldDeactivated()
+    {
+        shieldUI.SetActive(false);
+    }
+
+    public void OnShieldButtonClicked()
+    {
+        PowerUpManager.Instance.StartShieldPowerUp();
     }
 
     public void LevelCompleted()

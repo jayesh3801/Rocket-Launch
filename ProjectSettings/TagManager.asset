@@ -9,6 +9,7 @@ TagManager:
   - Fuel
   - Star
   - GoalTrigger
+  - Shield
   layers:
   - Default
   - TransparentFX

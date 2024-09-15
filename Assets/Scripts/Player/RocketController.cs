@@ -22,11 +22,13 @@ public class RocketController : MonoBehaviour
     private Vector3 originalScale;
 
     [SerializeField] private GameObject speedLineVFX;
+    [SerializeField] private GameObject deathVFX;
 
     private RocketFuel rocketFuel;
 
     private bool isShieldActive;
     private bool alreadyTapped;
+    private bool isDead = false;
 
     private float lastTapTime;
 
@@ -35,11 +37,12 @@ public class RocketController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         originalScale = transform.localScale;
-        rocketFuel = GetComponent<RocketFuel>(); 
+        rocketFuel = GetComponent<RocketFuel>();
     }
 
     private void Update()
     {
+        if(isDead) return;
         HandleInput();
         CapVelocity();
     }
@@ -47,15 +50,7 @@ public class RocketController : MonoBehaviour
     private void HandleInput()
     {
         if (Input.GetMouseButtonDown(0))
-        {   
-            if(Time.time - lastTapTime < doubleTapTime && !isLaunched)
-            {
-                PowerUpManager.Instance.StartShieldPowerUp();
-            }
-            else
-            {
-                lastTapTime = Time.time;
-            }
+        {
             if (!isLaunched && !IsPointerOverUI())
             {
                 dragStartPos = GetMouseWorldPosition();
@@ -63,8 +58,8 @@ public class RocketController : MonoBehaviour
             }
             else
             {
-                if(!alreadyTapped)
-                HandleRotationInput();
+                if (!alreadyTapped && !IsPointerOverUI())
+                    HandleRotationInput();
             }
         }
 
@@ -113,7 +108,7 @@ public class RocketController : MonoBehaviour
 
     private void ResetScale()
     {
-        transform.DOScaleY(originalScale.y, 0.1f);  
+        transform.DOScaleY(originalScale.y, 0.1f);
     }
 
     private IEnumerator ShowSpeedLines()
@@ -175,7 +170,7 @@ public class RocketController : MonoBehaviour
     }
     bool winSfxPlayed = false;
     private void OnCollisionEnter2D(Collision2D collision)
-    { 
+    {
         switch (collision.collider.tag)
         {
             case "Goal":
@@ -190,20 +185,26 @@ public class RocketController : MonoBehaviour
                 break;
 
             case "Obstacle":
-                if(isShieldActive){
+                if (isShieldActive)
+                {
                     isShieldActive = false;
+                    PowerUpManager.Instance.DeactivateShieldPowerUp();
+                    Destroy(collision.gameObject);
                     break;
                 }
                 AudioManager.Instance.PlayCrashSFX();
+                deathVFX.SetActive(true);
                 rb.velocity = Vector2.zero;
                 UIManager.Instance.LevelFailed();
-                Destroy(gameObject);
+                isDead = true;
+                Destroy(gameObject,2f);
                 Debug.Log("YOU LOSE");
                 break;
         }
     }
 
-    public void OnTriggerEnter2D(Collider2D collider){
+    public void OnTriggerEnter2D(Collider2D collider)
+    {
         switch (collider.tag)
         {
             case "GoalTrigger":
@@ -223,6 +224,10 @@ public class RocketController : MonoBehaviour
                 AudioManager.Instance.PlayStarCollectSFX();
                 Destroy(collider.gameObject);
                 break;
+            case "Shield":
+                UIManager.Instance.OnShieldPickedUp();
+                Destroy(collider.gameObject);
+                break;
         }
     }
 
@@ -233,17 +238,13 @@ public class RocketController : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void ActivateShield(){
-        
+    public void ActivateShield()
+    {
         isShieldActive = true;
-
-        // Additional shield activation logic // 
-
-        Debug.Log("Shield Activated!");
-
     }
 
-    public void ApplyPowerUp(IPowerUp powerUp){
-        powerUp.Execute();
+    public void DeactivateShield()
+    {
+        isShieldActive = false;
     }
 }
