@@ -18,11 +18,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        LoadSceneByIndex(1);
-    }
-
     public void LoadSceneByIndex(int sceneIndex)
     {
         SceneManager.LoadScene(sceneIndex);
