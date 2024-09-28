@@ -116,6 +116,10 @@ public class RocketController : MonoBehaviour
         speedLineVFX.SetActive(true);
         yield return new WaitForSeconds(1f);
         speedLineVFX.SetActive(false);
+        if (TutorialController.Instance)
+        {
+            TutorialController.Instance.ShowTapToRotateTutorial();
+        }
     }
 
     private void HandleRotationInput()

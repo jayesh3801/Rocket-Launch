@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class StarManager : MonoBehaviour
 {
-    public static StarManager Instance { get; private set; }
+    public static StarManager Instance;
     private int collectedStars = 0;
     int requiredStars = 3;
     [SerializeField] private TextMeshProUGUI starCounter;

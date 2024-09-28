@@ -8,7 +8,7 @@ public class PowerUpManager : MonoBehaviour
     public RocketController rocket;
 
     [SerializeField] private GameObject shieldObject;
-    [SerializeField] private float shieldDuration = 15f;
+    [SerializeField] private float shieldDuration = 5f;
 
     public static Action OnShieldDeactivated;
 
