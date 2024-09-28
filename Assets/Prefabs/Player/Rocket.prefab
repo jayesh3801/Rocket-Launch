@@ -172,9 +172,9 @@ MonoBehaviour:
   maxDragDistance: 2
   launchForceMultiplier: 5
   minScaleY: 0.6
-  maxVelocity: 10
-  moveForce: 5
-  returnDelay: 1
+  maxVelocity: 12
+  moveForce: 8
+  returnDelay: 0.7
   rotationDuration: 0.1
   doubleTapTime: 0.3
   speedLineVFX: {fileID: 0}
