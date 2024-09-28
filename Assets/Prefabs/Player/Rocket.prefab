@@ -175,7 +175,7 @@ MonoBehaviour:
   maxVelocity: 10
   moveForce: 5
   returnDelay: 1
-  rotationDuration: 0.5
+  rotationDuration: 0.1
   doubleTapTime: 0.3
   speedLineVFX: {fileID: 0}
   deathVFX: {fileID: 5195286289670944245}
